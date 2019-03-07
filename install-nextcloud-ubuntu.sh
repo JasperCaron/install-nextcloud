@@ -383,16 +383,6 @@ deny all;
 location ~ ^/(?:\.|autotest|occ|issue|indie|db_|console) {
 deny all;
 }
-location ~ \.(?:flv|mp4|mov|m4a)\$ {
-mp4;
-mp4_buffer_size 100m;
-mp4_max_buffer_size 1024m;
-fastcgi_split_path_info ^(.+\.php)(/.*)\$;
-include fastcgi_params;
-include php_optimization.conf;
-fastcgi_pass php-handler;
-fastcgi_param HTTPS on;
-}
 location ~ ^/(?:index|remote|public|cron|core/ajax/update|status|ocs/v[12]|updater/.+|ocs-provider/.+)\.php(?:\$|/) {
 fastcgi_split_path_info ^(.+\.php)(/.*)\$;
 include fastcgi_params;
