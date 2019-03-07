@@ -1,7 +1,7 @@
 ################################################
 # Carsten Rieger IT-Services
 # https://www.c-rieger.de
-# https://github.com/riegercloud
+# https://github.com/criegerde
 # INSTALL-NEXTCLOUD-DEBIAN.SH
 # Version 2.99beta1 (AMD64)
 # Nextcloud 15
