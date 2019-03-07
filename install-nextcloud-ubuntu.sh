@@ -1,18 +1,16 @@
-################################################
+####################################################
 # Carsten Rieger IT-Services
 # https://www.c-rieger.de
-# https://github.com/riegercloud
-# INSTALL-NEXTCLOUD.SH
-# Version 7.3 (AMD64)
+# https://github.com/criegerde
+# INSTALL-NEXTCLOUD-UBUNTU.SH
+# Version 2.99beta1 (AMD64)
 # Nextcloud 15
-# OpenSSL 1.1.1, TLSv1.3, NGINX 1.15.9 PHP 7.3
-# February, 27th 2019
-################################################
-# Ubuntu 18.04 LTS AMD64 - Nextcloud 15
-################################################
+# OpenSSL 1.1.1, TLSv1.3, NGINX latest, PHP 7.3
+# March, 7th 2019
+####################################################
+# Ubuntu Bionic Beaver 18.04.x AMD64 - Nextcloud 15
+####################################################
 #!/bin/bash
-### Set current NGINX Releaseversion
-NGINXVER="1.15.9"
 ###global function to update and cleanup the environment
 function update_and_clean() {
 apt update
@@ -53,13 +51,16 @@ echo ""
 echo "***********************************************************"
 echo "You will be asked to set the MariaDB root password 3 times."
 echo ""
-echo "Please just confirm the dialogue (ENTER)."
+echo "Please just confirm the dialogue (ENTER) without setting"
+echo "any password yet!"
 echo ""
-echo "You will be asked again to set the root pwd"
-echo "while harden your MariaDB Server!"
-echo "*********************************************************"
+echo "You will be asked again to set the root pwd while harden"
+echo "your MariaDB Server!"
+echo "***********************************************************"
 echo ""
 echo "Press ENTER to install MariaDB"
+echo ""
+echo "***********************************************************"
 read
 clear
 }
@@ -72,32 +73,16 @@ cat <<EOF >>/etc/apt/sources.list
 deb http://archive.ubuntu.com/ubuntu bionic main multiverse restricted universe
 deb http://archive.ubuntu.com/ubuntu bionic-security main multiverse restricted universe
 deb http://archive.ubuntu.com/ubuntu bionic-updates main multiverse restricted universe
-deb [arch=amd64] http://nginx.org/packages/mainline/ubuntu/ bionic nginx
 deb http://ppa.launchpad.net/ondrej/php/ubuntu bionic main
-deb-src [arch=amd64] http://nginx.org/packages/mainline/ubuntu/ bionic nginx
+deb http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu bionic main
 deb [arch=amd64] http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.3/ubuntu bionic main
 EOF
-wget http://nginx.org/keys/nginx_signing.key && apt-key add nginx_signing.key
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 4F4EA0AAE5267A6C
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8
 update_and_clean
 apt install software-properties-common zip unzip screen curl git wget ffmpeg libfile-fcntllock-perl -y
-apt remove nginx nginx-common nginx-full -y --allow-change-held-packages
-update_and_clean
 ###instal NGINX using TLSv1.3, OpenSSL 1.1.1
-mkdir /usr/local/src/nginx && cd /usr/local/src/nginx/
-apt install dpkg-dev -y && apt source nginx
-cd /usr/local/src && apt install git -y
-git clone https://github.com/openssl/openssl.git
-cd openssl && git checkout OpenSSL_1_1_1-stable
-cp /usr/local/src/install-nextcloud/maintainance/rules.nginx /usr/local/src/nginx/nginx-$NGINXVER/debian/rules
-sed -i "s/.*-Werror.*/# &/" /usr/local/src/nginx/nginx-$NGINXVER/auto/cc/gcc
-cd /usr/local/src/nginx/nginx-$NGINXVER/
-apt build-dep nginx -y && dpkg-buildpackage -b
-cd /usr/local/src/nginx/
-dpkg -i nginx_$NGINXVER-*.deb
-service nginx restart && apt-mark hold nginx
-# apt install nginx -y
+apt install nginx -y
 ###enable NGINX autostart
 systemctl enable nginx.service
 ### prepare the NGINX
@@ -140,7 +125,7 @@ include /etc/nginx/conf.d/*.conf;
 }
 EOF
 ###restart NGINX
-service nginx restart
+/usr/sbin/service nginx restart
 ###create folders
 mkdir -p /var/nc_data /var/www/letsencrypt /usr/local/tmp/sessions /usr/local/tmp/apc
 ###apply permissions
@@ -222,15 +207,14 @@ sed -i '$aapc.lazy_classes=0' /etc/php/7.3/fpm/php.ini
 sed -i '$aapc.lazy_functions=0' /etc/php/7.3/fpm/php.ini
 sed -i "s/09,39.*/# &/" /etc/cron.d/php
 (crontab -l ; echo "09,39 * * * * /usr/lib/php/sessionclean 2>&1") | crontab -u root -
-# sed -i '$atmpfs /tmp tmpfs defaults,noatime,nosuid,nodev,noexec,mode=1777 0 0' /etc/fstab
-# sed -i '$atmpfs /var/tmp tmpfs defaults,noatime,nosuid,nodev,noexec,mode=1777 0 0' /etc/fstab
+
 sed -i '$atmpfs /usr/local/tmp/apc tmpfs defaults,uid=33,size=300M,noatime,nosuid,nodev,noexec,mode=1777 0 0' /etc/fstab
 sed -i '$atmpfs /usr/local/tmp/sessions tmpfs defaults,uid=33,size=300M,noatime,nosuid,nodev,noexec,mode=1777 0 0' /etc/fstab
 ###make use of RAMDISK
 mount -a
 ###restart PHP and NGINX
-service php7.3-fpm restart
-service nginx restart
+/usr/sbin/service php7.3-fpm restart
+/usr/sbin/service nginx restart
 ###install MariaDB
 mariadbinfo
 apt update && apt install mariadb-server -y
